@@ -7,6 +7,8 @@
      #734)
    * Refactored Catalog.plot() into helper routine
      obspy.imaging.maps.plot_basemap() (see #753).
+ - obspy.pdas:
+   * read support for PDAS waveform files
  - obspy.station:
    * add plotting methods (response/bode, location maps) to
      Inventory/Station/Channel/Response objects (see #750)
