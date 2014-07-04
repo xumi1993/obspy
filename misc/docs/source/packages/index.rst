@@ -26,6 +26,7 @@ The functionality is provided through the following packages:
 
    obspy.css
    obspy.datamark
+   obspy.dyna
    obspy.gse2
    obspy.mseed
    obspy.sac

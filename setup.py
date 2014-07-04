@@ -75,13 +75,13 @@ else:
 KEYWORDS = [
     'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'beamforming', 'cross correlation', 'database', 'dataless',
-    'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
+    'Dataless SEED', 'datamark', 'DYNA', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
     'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
-    'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
-    'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'observatory', 'ORFEUS',
-    'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
-    'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
+    'instrument simulation', 'IRIS', 'ITACA', 'magnitude', 'MiniSEED',
+    'misfit', 'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'observatory',
+    'ORFEUS', 'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime',
+    'RESP', 'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
     'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
     'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
@@ -121,6 +121,8 @@ ENTRY_POINTS = {
         'PICKLE = obspy.core.stream',
         'CSS = obspy.css.core',
         'DATAMARK = obspy.datamark.core',
+        'DYNA = obspy.dyna.core',
+        'ITACA = obspy.dyna.core',
         'GSE1 = obspy.gse2.core',
         'GSE2 = obspy.gse2.core',
         'MSEED = obspy.mseed.core',
@@ -157,6 +159,15 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.DATAMARK': [
         'isFormat = obspy.datamark.core:isDATAMARK',
         'readFormat = obspy.datamark.core:readDATAMARK',
+    ],
+    "obspy.plugin.waveform.DYNA": [
+        "isFormat = obspy.dyna.core:isDYNA",
+        "readFormat = obspy.dyna.core:readDYNA",
+        "writeFormat = obspy.dyna.core:writeDYNA",
+    ],
+    "obspy.plugin.waveform.ITACA": [
+        "isFormat = obspy.dyna.core:isITACA",
+        "readFormat = obspy.dyna.core:readITACA",
     ],
     'obspy.plugin.waveform.GSE1': [
         'isFormat = obspy.gse2.core:isGSE1',
