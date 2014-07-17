@@ -24,11 +24,6 @@ def isPDAS(filename):
     :param filename: Name of file to be checked.
     :rtype: bool
     :return: ``True`` if a PDAS file.
-
-    .. rubric:: Example
-
-    >>> isPDAS("/path/to/p1246001_cropped.108")
-    True
     """
     with open(filename, "rb") as fh:
         header_fields = [fh.readline().split()[0] for i_ in xrange(11)]
@@ -57,12 +52,12 @@ def readPDAS(filename, **kwargs):
     .. rubric:: Example
 
     >>> from obspy import read
-    >>> st = read("/path/to/p1246001_cropped.108")
+    >>> st = read("/path/to/p1246001.108")
     >>> st  # doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
-    .AYT..BHZ | 2002-12-23T12:48:00.000100Z - ... | 100.0 Hz, 18000 samples
+    ... | 1994-04-18T00:00:00.000000Z - ... | 200.0 Hz, 500 samples
     """
     extra_headers = {}
     with open(filename, "rb") as fh:
