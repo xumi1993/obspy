@@ -57,7 +57,7 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
-from misc import _get_lib_name  # @UnresolvedImport
+from libnames import _get_lib_name  # @UnresolvedImport
 sys.path.pop(0)
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
@@ -79,15 +79,15 @@ KEYWORDS = [
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
     'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
     'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
-    'mopad', 'MSEED', 'NERA', 'NERIES', 'observatory', 'ORFEUS', 'picker',
-    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
+    'mopad', 'MSEED', 'NDK', 'NERA', 'NERIES', 'observatory', 'ORFEUS',
+    'picker', 'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
     'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
     'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
     'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
 INSTALL_REQUIRES = [
-    'future',
+    'future>=0.12.1',
     'numpy>1.0.0',
     'scipy',
     'matplotlib',
@@ -96,7 +96,8 @@ INSTALL_REQUIRES = [
     'suds-jurko']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
-              'nose']}
+              'nose',
+              'pyimgur']}
 # PY2
 if sys.version_info[0] == 2:
     EXTRAS_REQUIRE['tests'].append('mock')
@@ -227,6 +228,7 @@ ENTRY_POINTS = {
         'QUAKEML = obspy.core.quakeml',
         'MCHEDR = obspy.pde.mchedr',
         'JSON = obspy.core.json.core',
+        'NDK = obspy.ndk.core'
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.core.quakeml:isQuakeML',
@@ -240,6 +242,10 @@ ENTRY_POINTS = {
     'obspy.plugin.event.JSON': [
         'writeFormat = obspy.core.json.core:writeJSON',
     ],
+    'obspy.plugin.event.NDK': [
+        'isFormat = obspy.ndk.core:is_ndk',
+        'readFormat = obspy.ndk.core:read_ndk',
+        ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.station.stationxml',
     ],
@@ -271,6 +277,11 @@ ENTRY_POINTS = {
         'cumtrapz = scipy.integrate:cumtrapz',
         'simps = scipy.integrate:simps',
         'romb = scipy.integrate:romb',
+    ],
+    'obspy.plugin.interpolate': [
+        'interpolate_1d = obspy.signal.interpolation:interpolate_1d',
+        'weighted_average_slopes = '
+        'obspy.signal.interpolation:weighted_average_slopes',
     ],
     'obspy.plugin.rotate': [
         'rotate_NE_RT = obspy.signal:rotate_NE_RT',
@@ -328,12 +339,15 @@ def find_packages():
 
 # monkey patches for MS Visual Studio
 if IS_MSVC:
-    # support library paths containing spaces
-    def _library_dir_option(self, dir):
-        return '"/LIBPATH:%s"' % (dir)
-
+    import distutils
     from distutils.msvc9compiler import MSVCCompiler
-    MSVCCompiler.library_dir_option = _library_dir_option
+
+    # for Python 2.x only -> support library paths containing spaces
+    if distutils.__version__.startswith('2.'):
+        def _library_dir_option(self, dir):
+            return '/LIBPATH:"%s"' % (dir)
+
+        MSVCCompiler.library_dir_option = _library_dir_option
 
     # remove 'init' entry in exported symbols
     def _get_export_symbols(self, ext):

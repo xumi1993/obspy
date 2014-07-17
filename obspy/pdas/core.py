@@ -8,6 +8,10 @@ PDAS bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import (absolute_import, division, print_function,
+                        unicode_literals)
+from future.builtins import *  # NOQA
+
 import numpy as np
 from obspy.core import UTCDateTime, Stream, Trace
 
@@ -91,3 +95,8 @@ def readPDAS(filename, **kwargs):
     tr.stats.pdas = extra_headers
     st = Stream(traces=[tr])
     return st
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

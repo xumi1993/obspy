@@ -36,6 +36,16 @@ The functionality is provided through the following packages:
    obspy.wav
    obspy.y
 
+.. rubric:: Event Data Import/Export Plug-ins
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
+
+   obspy.core.quakeml
+   obspy.ndk
+   obspy.pde
+
 .. rubric:: Database or Web Service Access Clients
 
 .. autosummary::
@@ -49,6 +59,5 @@ The functionality is provided through the following packages:
    obspy.iris
    obspy.neic
    obspy.neries
-   obspy.pde
    obspy.seedlink
    obspy.seishub
