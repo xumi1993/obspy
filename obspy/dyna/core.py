@@ -16,7 +16,6 @@ from io import StringIO
 from obspy.core import Stream, Trace, UTCDateTime, Stats
 import numpy as np
 import re
-#import string
 
 
 def isDYNA(filename):
@@ -396,7 +395,7 @@ def readITACA(filename, headonly=False, **kwargs):  # @UnusedVariable
         # skip data
         stream.append(Trace(header=header))
     else:
-       # read data
+        # read data
         data = np.loadtxt(fh, dtype='float32')
         if headers['DATA_TYPE'][-8:] == "SPECTRUM":
             data_1 = np.array([], dtype=np.float32)
