@@ -17,8 +17,9 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib.colorbar import Colorbar
 from matplotlib.cm import ScalarMappable
-from matplotlib.ticker import (FixedLocator, FormatStrFormatter, FuncFormatter,
-                               Formatter, MaxNLocator)
+from matplotlib.ticker import (FixedLocator, FixedFormatter,
+                               FormatStrFormatter, FuncFormatter, Formatter,
+                               MaxNLocator)
 from matplotlib.dates import date2num, AutoDateLocator, \
     AutoDateFormatter
 import datetime
@@ -190,36 +191,6 @@ def plot_basemap(lons, lats, size, color, labels=None,
         # TODO: Not the correct projection!
         proj = ccrs.Stereographic(central_latitude=lat_0,
                                   central_longitude=lon_0)
-        # not most elegant way to calculate some round lats/lons
-
-        def linspace2(val1, val2, N):
-            """
-            returns around N 'nice' values between val1 and val2
-            """
-            dval = val2 - val1
-            round_pos = int(round(-np.log10(1. * dval / N)))
-            # Fake negative rounding as not supported by future as of now.
-            if round_pos < 0:
-                factor = 10 ** (abs(round_pos))
-                delta = round(2. * dval / N / factor) * factor / 2
-            else:
-                delta = round(2. * dval / N, round_pos) / 2
-            new_val1 = np.ceil(val1 / delta) * delta
-            new_val2 = np.floor(val2 / delta) * delta
-            N = (new_val2 - new_val1) / delta + 1
-            return np.linspace(new_val1, new_val2, N)
-
-        N1 = int(np.ceil(height / max(width, height) * 8))
-        N2 = int(np.ceil(width / max(width, height) * 8))
-        # bmap.drawparallels(linspace2(lat_0 - height / 2 / deg2m_lat,
-        #                              lat_0 + height / 2 / deg2m_lat, N1),
-        #                    labels=[0, 1, 1, 0])
-        if min(lons) < -150 and max(lons) > 150:
-            lon_0 %= 360
-        meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
-                              lon_0 + width / 2 / deg2m_lon, N2)
-        meridians[meridians > 180] -= 360
-        # bmap.drawmeridians(meridians, labels=[1, 0, 0, 1])
     else:
         msg = "Projection '%s' not supported." % projection
         raise ValueError(msg)
@@ -245,10 +216,45 @@ def plot_basemap(lons, lats, size, color, labels=None,
     map_ax.coastlines(resolution=RESOLUTIONS[resolution], color='0.4')
     # draw the edge of the bmap projection region (the projection limb)
     # bmap.drawmapboundary(fill_color=water_fill_color)
-    # draw lat/lon grid lines every 30 degrees.
+
+    # draw grid lines
     gl = map_ax.gridlines()
-    gl.xlocator = FixedLocator(np.arange(-180, 181, 30))
-    gl.ylocator = FixedLocator(np.arange(-90, 91, 30))
+    if projection == 'local':
+        # not most elegant way to calculate some round lats/lons
+        def linspace2(val1, val2, N):
+            """
+            returns around N 'nice' values between val1 and val2
+            """
+            dval = val2 - val1
+            round_pos = int(round(-np.log10(1. * dval / N)))
+            # Fake negative rounding as not supported by future as of now.
+            if round_pos < 0:
+                factor = 10 ** (abs(round_pos))
+                delta = round(2. * dval / N / factor) * factor / 2
+            else:
+                delta = round(2. * dval / N, round_pos) / 2
+            new_val1 = np.ceil(val1 / delta) * delta
+            new_val2 = np.floor(val2 / delta) * delta
+            N = (new_val2 - new_val1) / delta + 1
+            return np.linspace(new_val1, new_val2, N)
+
+        N1 = int(np.ceil(height / max(width, height) * 8))
+        N2 = int(np.ceil(width / max(width, height) * 8))
+        gl.ylocator = FixedLocator(linspace2(lat_0 - height / 2 / deg2m_lat,
+                                             lat_0 + height / 2 / deg2m_lat,
+                                             N1))
+        # labels=[0, 1, 1, 0]
+        if min(lons) < -150 and max(lons) > 150:
+            lon_0 %= 360
+        meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
+                              lon_0 + width / 2 / deg2m_lon, N2)
+        meridians[meridians > 180] -= 360
+        gl.xlocator = FixedLocator(meridians)
+        # labels=[1, 0, 0, 1]
+    else:
+        # draw lat/lon grid lines every 30 degrees.
+        gl.xlocator = FixedLocator(np.arange(-180, 181, 30))
+        gl.ylocator = FixedLocator(np.arange(-90, 91, 30))
 
     # compute the native bmap projection coordinates for events.
     # x, y = bmap(lons, lats)
