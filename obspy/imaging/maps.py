@@ -17,8 +17,8 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
 from matplotlib.colorbar import Colorbar
 from matplotlib.cm import ScalarMappable
-from matplotlib.ticker import FormatStrFormatter, FuncFormatter, Formatter, \
-    MaxNLocator
+from matplotlib.ticker import (FixedLocator, FormatStrFormatter, FuncFormatter,
+                               Formatter, MaxNLocator)
 from matplotlib.dates import date2num, AutoDateLocator, \
     AutoDateFormatter
 import datetime
@@ -245,10 +245,10 @@ def plot_basemap(lons, lats, size, color, labels=None,
     map_ax.coastlines(resolution=RESOLUTIONS[resolution], color='0.4')
     # draw the edge of the bmap projection region (the projection limb)
     # bmap.drawmapboundary(fill_color=water_fill_color)
-    # TODO: draw lat/lon grid lines every 30 degrees.
-    # bmap.drawmeridians(np.arange(-180, 180, 30))
-    # bmap.drawparallels(np.arange(-90, 90, 30))
-    map_ax.gridlines()
+    # draw lat/lon grid lines every 30 degrees.
+    gl = map_ax.gridlines()
+    gl.xlocator = FixedLocator(np.arange(-180, 181, 30))
+    gl.ylocator = FixedLocator(np.arange(-90, 91, 30))
 
     # compute the native bmap projection coordinates for events.
     # x, y = bmap(lons, lats)
