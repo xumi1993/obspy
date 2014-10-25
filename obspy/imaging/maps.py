@@ -38,11 +38,21 @@ else:
         path_effects=[PathEffects.withStroke(linewidth=3, foreground="white")])
 
 try:
-    from mpl_toolkits.basemap import Basemap
-    HAS_BASEMAP = True
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+    HAS_CARTOPY = True
 except ImportError:
-    warnings.warn("basemap not installed.")
-    HAS_BASEMAP = False
+    warnings.warn("Cartopy not installed.")
+    HAS_CARTOPY = False
+
+
+RESOLUTIONS = {
+    'c': '110m',
+    'l': '110m',
+    'i': '50m',
+    'h': '50m',
+    'f': '10m'
+}
 
 
 def plot_basemap(lons, lats, size, color, labels=None,
@@ -139,23 +149,11 @@ def plot_basemap(lons, lats, size, color, labels=None,
     else:
         ax_x0, ax_width = 0.05, 0.90
 
-    if show_colorbar:
-        map_ax = fig.add_axes([ax_x0, 0.13, ax_width, 0.77])
-        cm_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.05])
-        plt.sca(map_ax)
-    else:
-        ax_y0, ax_height = 0.05, 0.85
-        if projection == "local":
-            ax_y0 += 0.05
-            ax_height -= 0.05
-        map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height])
-
     if projection == 'cyl':
-        bmap = Basemap(resolution=resolution)
+        proj = ccrs.PlateCarree()
     elif projection == 'ortho':
-        bmap = Basemap(projection='ortho', resolution=resolution,
-                       area_thresh=1000.0, lat_0=np.mean(lats),
-                       lon_0=np.mean(lons))
+        proj = ccrs.Orthographic(central_latitude=np.mean(lats),
+                                 central_longitude=np.mean(lons))
     elif projection == 'local':
         if min(lons) < -150 and max(lons) > 150:
             max_lons = max(np.array(lons) % 360)
@@ -189,9 +187,9 @@ def plot_basemap(lons, lats, size, color, labels=None,
         else:
             height = width / aspect
 
-        bmap = Basemap(projection='aeqd', resolution=resolution,
-                       area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
-                       width=width, height=height)
+        # TODO: Not the correct projection!
+        proj = ccrs.Stereographic(central_latitude=lat_0,
+                                  central_longitude=lon_0)
         # not most elegant way to calculate some round lats/lons
 
         def linspace2(val1, val2, N):
@@ -213,35 +211,49 @@ def plot_basemap(lons, lats, size, color, labels=None,
 
         N1 = int(np.ceil(height / max(width, height) * 8))
         N2 = int(np.ceil(width / max(width, height) * 8))
-        bmap.drawparallels(linspace2(lat_0 - height / 2 / deg2m_lat,
-                                     lat_0 + height / 2 / deg2m_lat, N1),
-                           labels=[0, 1, 1, 0])
+        # bmap.drawparallels(linspace2(lat_0 - height / 2 / deg2m_lat,
+        #                              lat_0 + height / 2 / deg2m_lat, N1),
+        #                    labels=[0, 1, 1, 0])
         if min(lons) < -150 and max(lons) > 150:
             lon_0 %= 360
         meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
                               lon_0 + width / 2 / deg2m_lon, N2)
         meridians[meridians > 180] -= 360
-        bmap.drawmeridians(meridians, labels=[1, 0, 0, 1])
+        # bmap.drawmeridians(meridians, labels=[1, 0, 0, 1])
     else:
         msg = "Projection '%s' not supported." % projection
         raise ValueError(msg)
 
+    if show_colorbar:
+        map_ax = fig.add_axes([ax_x0, 0.13, ax_width, 0.77], projection=proj)
+        cm_ax = fig.add_axes([ax_x0, 0.05, ax_width, 0.05])
+        plt.sca(map_ax)
+    else:
+        ax_y0, ax_height = 0.05, 0.85
+        if projection == "local":
+            ax_y0 += 0.05
+            ax_height -= 0.05
+        map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height],
+                              projection=proj)
+    map_ax.set_global()
+
     # draw coast lines, country boundaries, fill continents.
     map_ax.set_axis_bgcolor(water_fill_color)
-    bmap.drawcoastlines(color="0.4")
-    bmap.drawcountries(color="0.75")
-    bmap.fillcontinents(color=continent_fill_color,
-                        lake_color=water_fill_color)
+    map_ax.add_feature(cfeature.OCEAN, facecolor=water_fill_color)
+    map_ax.add_feature(cfeature.LAND, facecolor=continent_fill_color)
+    map_ax.add_feature(cfeature.BORDERS, edgecolor='0.75')
+    map_ax.coastlines(resolution=RESOLUTIONS[resolution], color='0.4')
     # draw the edge of the bmap projection region (the projection limb)
-    bmap.drawmapboundary(fill_color=water_fill_color)
-    # draw lat/lon grid lines every 30 degrees.
-    bmap.drawmeridians(np.arange(-180, 180, 30))
-    bmap.drawparallels(np.arange(-90, 90, 30))
+    # bmap.drawmapboundary(fill_color=water_fill_color)
+    # TODO: draw lat/lon grid lines every 30 degrees.
+    # bmap.drawmeridians(np.arange(-180, 180, 30))
+    # bmap.drawparallels(np.arange(-90, 90, 30))
+    map_ax.gridlines()
 
     # compute the native bmap projection coordinates for events.
-    x, y = bmap(lons, lats)
+    # x, y = bmap(lons, lats)
     # plot labels
-    if labels:
+    if labels and False:
         if 100 > len(lons) > 1:
             for name, xpt, ypt, _colorpt in zip(labels, x, y, color):
                 # Check if the point can actually be seen with the current bmap
@@ -255,8 +267,8 @@ def plot_basemap(lons, lats, size, color, labels=None,
             plt.text(x[0], y[0], labels[0], weight="heavy", color="k",
                      **path_effect_kwargs)
 
-    scatter = bmap.scatter(x, y, marker=marker, s=size, c=color,
-                           zorder=10, cmap=colormap)
+    scatter = map_ax.scatter(lons, lats, marker=marker, s=size, c=color,
+                             zorder=10, cmap=colormap)
 
     if title:
         plt.suptitle(title)
