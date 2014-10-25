@@ -166,17 +166,15 @@ def plot_basemap(lons, lats, size, color, labels=None,
         lon_0 = max_lons / 2. + min_lons / 2.
         if lon_0 > 180:
             lon_0 -= 360
-        deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
-        deg2m_lon = deg2m_lat * np.cos(lat_0 / 180 * np.pi)
         if len(lats) > 1:
-            height = (max(lats) - min(lats)) * deg2m_lat
-            width = (max_lons - min_lons) * deg2m_lon
+            height = max(lats) - min(lats)
+            width = max_lons - min_lons
             margin = 0.2 * (width + height)
             height += margin
             width += margin
         else:
-            height = 2.0 * deg2m_lat
-            width = 5.0 * deg2m_lon
+            height = 2.0
+            width = 5.0
         # do intelligent aspect calculation for local projection
         # adjust to figure dimensions
         w, h = fig.get_size_inches()
@@ -206,7 +204,12 @@ def plot_basemap(lons, lats, size, color, labels=None,
             ax_height -= 0.05
         map_ax = fig.add_axes([ax_x0, ax_y0, ax_width, ax_height],
                               projection=proj)
-    map_ax.set_global()
+
+    if projection == 'local':
+        map_ax.set_extent((lon_0 - width / 2, lon_0 + width / 2,
+                           lat_0 - height / 2, lat_0 + height / 2))
+    else:
+        map_ax.set_global()
 
     # draw coast lines, country boundaries, fill continents.
     map_ax.set_axis_bgcolor(water_fill_color)
@@ -218,8 +221,9 @@ def plot_basemap(lons, lats, size, color, labels=None,
     # bmap.drawmapboundary(fill_color=water_fill_color)
 
     # draw grid lines
-    gl = map_ax.gridlines()
     if projection == 'local':
+        gl = map_ax.gridlines() # draw_labels=True) - TODO: doesn't work yet.
+
         # not most elegant way to calculate some round lats/lons
         def linspace2(val1, val2, N):
             """
@@ -240,18 +244,18 @@ def plot_basemap(lons, lats, size, color, labels=None,
 
         N1 = int(np.ceil(height / max(width, height) * 8))
         N2 = int(np.ceil(width / max(width, height) * 8))
-        gl.ylocator = FixedLocator(linspace2(lat_0 - height / 2 / deg2m_lat,
-                                             lat_0 + height / 2 / deg2m_lat,
+        gl.ylocator = FixedLocator(linspace2(lat_0 - height / 2,
+                                             lat_0 + height / 2,
                                              N1))
         # labels=[0, 1, 1, 0]
         if min(lons) < -150 and max(lons) > 150:
             lon_0 %= 360
-        meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
-                              lon_0 + width / 2 / deg2m_lon, N2)
+        meridians = linspace2(lon_0 - width / 2, lon_0 + width / 2, N2)
         meridians[meridians > 180] -= 360
         gl.xlocator = FixedLocator(meridians)
         # labels=[1, 0, 0, 1]
     else:
+        gl = map_ax.gridlines()
         # draw lat/lon grid lines every 30 degrees.
         gl.xlocator = FixedLocator(np.arange(-180, 181, 30))
         gl.ylocator = FixedLocator(np.arange(-90, 91, 30))
