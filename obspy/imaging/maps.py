@@ -268,7 +268,8 @@ def plot_basemap(lons, lats, size, color, labels=None,
                      **path_effect_kwargs)
 
     scatter = map_ax.scatter(lons, lats, marker=marker, s=size, c=color,
-                             zorder=10, cmap=colormap)
+                             zorder=10, cmap=colormap,
+                             transform=ccrs.Geodetic())
 
     if title:
         plt.suptitle(title)
