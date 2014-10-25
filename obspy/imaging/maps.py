@@ -256,22 +256,13 @@ def plot_basemap(lons, lats, size, color, labels=None,
         gl.xlocator = FixedLocator(np.arange(-180, 181, 30))
         gl.ylocator = FixedLocator(np.arange(-90, 91, 30))
 
-    # compute the native bmap projection coordinates for events.
-    # x, y = bmap(lons, lats)
     # plot labels
-    if labels and False:
-        if 100 > len(lons) > 1:
-            for name, xpt, ypt, _colorpt in zip(labels, x, y, color):
-                # Check if the point can actually be seen with the current bmap
-                # projection. The bmap object will set the coordinates to very
-                # large values if it cannot project a point.
-                if xpt > 1e25:
-                    continue
-                plt.text(xpt, ypt, name, weight="heavy",
-                         color="k", zorder=100, **path_effect_kwargs)
-        elif len(lons) == 1:
-            plt.text(x[0], y[0], labels[0], weight="heavy", color="k",
-                     **path_effect_kwargs)
+    if labels and len(lons) > 0:
+        with map_ax.hold_limits():
+            for name, xpt, ypt, _colorpt in zip(labels, lons, lats, color):
+                map_ax.text(xpt, ypt, name, weight="heavy", color="k",
+                            zorder=100, transform=ccrs.Geodetic(),
+                            **path_effect_kwargs)
 
     scatter = map_ax.scatter(lons, lats, marker=marker, s=size, c=color,
                              zorder=10, cmap=colormap,
