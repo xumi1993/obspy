@@ -1846,6 +1846,9 @@ def raise_on_error(code, data):
             server_info = server_info.decode('ASCII', errors='ignore')
         except AttributeError:
             pass
+        # Check for TimeoutError
+        if type(data) == TimeoutError:
+            server_info = str(data)
         if server_info:
             server_info = "\n".join(
                 line for line in server_info.splitlines() if line)
